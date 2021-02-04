@@ -1,10 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponse, Http404
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+from django.views.generic.edit import UpdateView
+from django.urls import reverse_lazy
+
+from .models import AdvUser
+from .forms import ChangeUserInfoForm
 
 
 class BBLoginView(LoginView):
@@ -13,6 +19,24 @@ class BBLoginView(LoginView):
 
 class BBLogoutView(LoginRequiredMixin, LogoutView):
     template_name = 'main/logout.html'
+
+
+class ChangeUserInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
+    """Контроллер странницы основных данных, который выполняет правку записи модели AdvUser"""
+    model = AdvUser
+    template_name = 'main/change_user_info.html'
+    form_class = ChangeUserInfoForm
+    success_url = reverse_lazy('main:profile')
+    success_message = 'Данные пользователя изменены'
+
+    def setup(self, request, *args, **kwargs):
+        self.user_id = request.user.pk
+        return super().setup(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        if not queryset:
+            queryset = self.get_queryset()
+        return get_object_or_404(queryset, pk=self.user_id)
 
 
 def index(request):
