@@ -6,11 +6,12 @@ from django.http import HttpResponse, Http404
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.shortcuts import get_object_or_404, render
-from django.views.generic.edit import UpdateView
+from django.views.generic.base import TemplateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
 
 from .models import AdvUser
-from .forms import ChangeUserInfoForm
+from .forms import ChangeUserInfoForm, RegisterUserForm
 
 
 class BBLoginView(LoginView):
@@ -45,6 +46,19 @@ class ChangeUserInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(queryset, pk=self.user_id)
+
+
+class RegisterUserView(CreateView):
+    """Контроллер, регистрирующий пользователя"""
+    model = AdvUser
+    template_name = 'main/register_user.html'
+    form_class = RegisterUserForm
+    success_url = reverse_lazy('main:register_done')
+
+
+class RegisterDoneView(TemplateView):
+    """Контроллер, который выводит сообщение об успешной регистрации"""
+    template_name = 'main/register_done.html'
 
 
 def index(request):
