@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponse, Http404
 from django.template import TemplateDoesNotExist
@@ -21,6 +21,12 @@ class BBLogoutView(LoginRequiredMixin, LogoutView):
     template_name = 'main/logout.html'
 
 
+class BBPasswordChangeView(SuccessMessageMixin, LoginRequiredMixin, PasswordChangeView):
+    template_name = 'main/password_change.html'
+    success_url = reverse_lazy('main:profile')
+    success_message = 'Пароль пользователя успешно изменен!'
+
+
 class ChangeUserInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
     """Контроллер странницы основных данных, который выполняет правку записи модели AdvUser"""
     model = AdvUser
@@ -30,10 +36,12 @@ class ChangeUserInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
     success_message = 'Данные пользователя изменены'
 
     def setup(self, request, *args, **kwargs):
+        """Получение  ключа текущего пользователя( выполняется в начале исполнения контроллера-класса)"""
         self.user_id = request.user.pk
         return super().setup(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
+        """Извлечение исправляемой записи"""
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(queryset, pk=self.user_id)
